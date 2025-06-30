@@ -21,6 +21,6 @@
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
       "text": "Use Conventional Commit"
-    },
+    }
   ]
 }
