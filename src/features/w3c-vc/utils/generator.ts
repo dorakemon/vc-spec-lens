@@ -9,7 +9,7 @@ export function generateW3CVC(
   subject: CredentialSubjectData,
   options: W3CVCOptions,
 ) {
-  const credential = {
+  const credential: Record<string, unknown> = {
     "@context": options.context,
     type: options.type,
     issuer: common.issuer,

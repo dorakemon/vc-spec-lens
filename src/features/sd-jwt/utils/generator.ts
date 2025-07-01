@@ -20,8 +20,8 @@ export async function generateSDJWT(
   };
 
   // Create disclosures for selective disclosure fields
-  const disclosures: Array<{ key: string; value: any; salt: string }> = [];
-  const disclosedClaims = { ...claims };
+  const disclosures: Array<{ key: string; value: unknown; salt: string }> = [];
+  const disclosedClaims: Record<string, unknown> = { ...claims };
 
   for (const field of options.selectiveDisclosure) {
     if (
@@ -47,7 +47,7 @@ export async function generateSDJWT(
     payload: {
       ...disclosedClaims,
       _sd_alg: options.hashAlgorithm,
-    },
+    } as Record<string, unknown> & { _sd_alg: string; _sd?: string[] },
   };
 
   // Add digests for selective disclosure
@@ -94,7 +94,10 @@ async function hashDisclosure(
     .replace(/=/g, "");
 }
 
-export function formatSDJWT(jwt: any, disclosures: string[]): string {
+export function formatSDJWT(
+  jwt: { header: Record<string, unknown>; payload: Record<string, unknown> },
+  disclosures: string[],
+): string {
   // Simple JWT encoding (in production, this would be properly signed)
   const header = btoa(JSON.stringify(jwt.header))
     .replace(/\+/g, "-")
