@@ -1,103 +1,106 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { CommonFields } from "@/features/common/components/CommonFields";
+import { CredentialBody } from "@/features/common/components/CredentialBody";
+import { CredentialOutput } from "@/features/common/components/CredentialOutput";
+import { useCredentialForm } from "@/features/common/hooks/useCredentialForm";
+import { useCredentialGenerator } from "@/features/common/hooks/useCredentialGenerator";
+import { MDocForm } from "@/features/mdoc/components/MDocForm";
+import type { MDocOptions } from "@/features/mdoc/types";
+import { SDJWTForm } from "@/features/sd-jwt/components/SDJWTForm";
+import type { SDJWTOptions } from "@/features/sd-jwt/types";
+import { W3CVCForm } from "@/features/w3c-vc/components/W3CVCForm";
+import type { W3CVCOptions } from "@/features/w3c-vc/types";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { commonFields, setCommonFields, subjectData, setSubjectData } =
+    useCredentialForm();
+  const {
+    w3cCredential,
+    mdocCredential,
+    sdJwtCredential,
+    generateCredentials,
+    isGenerating,
+  } = useCredentialGenerator();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const [w3cOptions, setW3cOptions] = useState<W3CVCOptions>({
+    context: ["https://www.w3.org/ns/credentials/v2"],
+    type: ["VerifiableCredential"],
+  });
+
+  const [mdocOptions, setMdocOptions] = useState<MDocOptions>({
+    docType: "org.iso.18013.5.1.mDL",
+    nameSpace: "org.iso.18013.5.1",
+  });
+
+  const [sdJwtOptions, setSdJwtOptions] = useState<SDJWTOptions>({
+    hashAlgorithm: "sha-256",
+    selectiveDisclosure: ["name", "email"],
+    keyBinding: false,
+  });
+
+  const handleGenerate = () => {
+    generateCredentials(
+      commonFields,
+      subjectData,
+      w3cOptions,
+      mdocOptions,
+      sdJwtOptions,
+    );
+  };
+
+  const availableFields = Object.keys(subjectData).filter(
+    (key) => typeof subjectData[key] !== "object",
+  );
+
+  return (
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Credential Comparison Tool</h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="space-y-6">
+            <CommonFields fields={commonFields} onChange={setCommonFields} />
+
+            <CredentialBody data={subjectData} onChange={setSubjectData} />
+          </div>
+
+          <div className="space-y-6">
+            <W3CVCForm options={w3cOptions} onChange={setW3cOptions} />
+
+            <MDocForm options={mdocOptions} onChange={setMdocOptions} />
+
+            <SDJWTForm
+              options={sdJwtOptions}
+              onChange={setSdJwtOptions}
+              availableFields={availableFields}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="flex justify-center mb-8">
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+          >
+            {isGenerating ? "Generating..." : "Generate Credentials"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <CredentialOutput
+            credential={w3cCredential}
+            title="W3C VC Data Model"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          <CredentialOutput credential={mdocCredential} title="ISO mDOC" />
+
+          <CredentialOutput credential={sdJwtCredential} title="IETF SD-JWT" />
+        </div>
+      </div>
     </div>
   );
 }
